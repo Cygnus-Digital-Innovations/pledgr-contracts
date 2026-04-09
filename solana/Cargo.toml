@@ -1,0 +1,27 @@
+[workspace]
+members = [
+    "programs/pledgr",
+]
+resolver = "2"
+
+[profile.release]
+overflow-checks = true
+lto = "fat"
+codegen-units = 1
+# Add this line to optimize for size
+opt-level = "z"
+
+[profile.release.build-override]
+opt-level = 3
+incremental = false
+codegen-units = 1
+
+# Add this section for Anchor-specific optimizations
+[profile.release.package."solana-program"]
+opt-level = "z"
+overflow-checks = false
+
+[profile.release.package."solana-frozen-abi-macro"]
+opt-level = "z"
+overflow-checks = false
+

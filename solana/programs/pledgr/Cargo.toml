@@ -1,0 +1,27 @@
+[package]
+name = "pledgr"
+version = "0.1.0"
+description = "Pledgr - Unified subscription payment platform"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "pledgr"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
+default = ["no-log-ix-name"]
+
+[dependencies]
+anchor-lang = "0.31.1"
+anchor-spl = "0.31.1"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true

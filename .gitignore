@@ -1,0 +1,31 @@
+# Build
+/target
+**/*.rs.bk
+**/*.so
+artifacts
+cache
+
+# Solana
+.anchor
+test-ledger
+
+# EVM
+node_modules/
+
+# Keys
+**/keypairs/*.json
+*.pem
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.*
