@@ -145,17 +145,21 @@ contract BuyOutAuction is AccessControl, ReentrancyGuard {
         );
     }
 
-    /**
-     * @notice Place a bid
-     * @param _amount Bid amount
-     */
+    function _isActive() internal view returns (bool) {
+        if (auctionStatus == Status.CREATED || auctionStatus == Status.CANCELLED) return false;
+        if (auctionStatus == Status.COMPLETED) return false;
+        if (block.timestamp >= endTime) return false;
+        if (buyOutEnabled && highestBid >= buyOutPrice) return false;
+        if (block.timestamp < startTime) return false;
+        return true;
+    }
+
     function createBid(uint256 _amount) external nonReentrant {
-        require(auctionStatus == Status.ACTIVE, "Auction not active");
-        require(block.timestamp >= startTime, "Auction not started");
-        require(block.timestamp < endTime, "Auction ended");
+        require(_isActive(), "Auction not active");
         require(msg.sender != owner, "Owner cannot bid");
         require(_amount >= startingPrice, "Amount below starting price");
         require(_amount >= highestBid + tickSize, "Amount below tick size");
+        require(highestBid + tickSize > highestBid, "Overflow");
 
         // Refund previous highest bidder
         if (highestBidder != address(0) && !hasWithdrawn[highestBidder]) {
@@ -182,14 +186,12 @@ contract BuyOutAuction is AccessControl, ReentrancyGuard {
      * @notice Execute buy out - instant purchase
      */
     function executeBuyOut() external nonReentrant {
-        require(auctionStatus == Status.ACTIVE, "Auction not active");
-        require(block.timestamp >= startTime, "Auction not started");
-        require(block.timestamp < endTime, "Auction ended");
+        require(_isActive(), "Auction not active");
         require(buyOutEnabled, "Buy out not enabled");
         require(msg.sender != owner, "Owner cannot buy out");
+        require(highestBid < buyOutPrice, "Already at buy out price");
 
         uint256 amount = buyOutPrice;
-        require(highestBid < buyOutPrice, "Already at buy out price");
 
         // Refund highest bidder if exists
         if (highestBidder != address(0) && !hasWithdrawn[highestBidder]) {
@@ -212,21 +214,23 @@ contract BuyOutAuction is AccessControl, ReentrancyGuard {
      */
     function withdraw() external nonReentrant {
         require(hasWithdrawn[msg.sender] == false, "Already withdrawn");
-        require(
-            auctionStatus == Status.CANCELLED || 
-            (highestBidder != msg.sender && block.timestamp >= endTime),
-            "Cannot withdraw"
-        );
+        
+        bool canWithdraw = false;
+        if (auctionStatus == Status.CANCELLED) {
+            canWithdraw = true;
+        } else if (auctionStatus == Status.COMPLETED || block.timestamp >= endTime) {
+            if (msg.sender != highestBidder) canWithdraw = true;
+        }
+        
+        require(canWithdraw, "Cannot withdraw");
 
-        uint256 refundAmount = (msg.sender == highestBidder) ? highestBid : 0;
+        uint256 refundAmount = 0;
         
         // For outbidded users, find their last bid
-        if (msg.sender != highestBidder && auctionStatus != Status.CANCELLED) {
-            for (uint256 i = bidHistory.length; i > 0; i--) {
-                if (bidHistory[i - 1].bidder == msg.sender) {
-                    refundAmount = bidHistory[i - 1].amount;
-                    break;
-                }
+        for (uint256 i = bidHistory.length; i > 0; i--) {
+            if (bidHistory[i - 1].bidder == msg.sender) {
+                refundAmount = bidHistory[i - 1].amount;
+                break;
             }
         }
 
@@ -242,7 +246,7 @@ contract BuyOutAuction is AccessControl, ReentrancyGuard {
      * @notice Claim item (for winner)
      */
     function claim() external nonReentrant {
-        require(auctionStatus == Status.COMPLETED, "Auction not completed");
+        require(auctionStatus == Status.COMPLETED || (block.timestamp >= endTime && highestBid > 0), "Auction not completed");
         require(msg.sender == highestBidder, "Not winner");
         require(!hasClaimed[msg.sender], "Already claimed");
 
@@ -258,7 +262,7 @@ contract BuyOutAuction is AccessControl, ReentrancyGuard {
      * @notice Cancel auction (only before start or by owner)
      */
     function cancelAuction() external onlyRole(OWNER_ROLE) {
-        require(auctionStatus == Status.ACTIVE, "Cannot cancel");
+        require(_isActive(), "Cannot cancel");
         require(block.timestamp < startTime || highestBid == 0, "Cannot cancel with active bids");
 
         auctionStatus = Status.CANCELLED;
