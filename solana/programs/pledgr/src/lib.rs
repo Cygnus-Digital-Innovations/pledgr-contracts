@@ -11,7 +11,7 @@ pub use instructions::upgrade_subscription::UpgradeSubscriptionParams;
 use instructions::*;
 pub use state::*;
 
-declare_id!("FWCZM4yuBeBevovMPyv7ZcZFEhgv4r8LsM4X4Eftf455");
+declare_id!("J2v9sr2fvXShGJKDgX4fMmHkjeGfjy69ekqBSKLgdvEV");
 
 #[allow(ambiguous_glob_reexports)]
 #[program]

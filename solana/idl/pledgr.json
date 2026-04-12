@@ -1,0 +1,1667 @@
+{
+  "address": "CAhH1d8wKSDFdTQyqvFcmdCkH9PU6ArFrVc4LN1jDqZD",
+  "metadata": {
+    "name": "pledgr",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Pledgr - Consolidated subscription payment platform"
+  },
+  "instructions": [
+    {
+      "name": "add_renewal_executor",
+      "discriminator": [202, 127, 127, 92, 182, 120, 24, 37],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 114, 111, 99, 101, 115, 115, 111, 114]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "executor",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "add_supported_token",
+      "discriminator": [109, 142, 133, 205, 240, 28, 197, 245],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 114, 111, 99, 101, 115, 115, 111, 114]
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_mint"
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "cancel_subscription",
+      "discriminator": [60, 139, 189, 242, 191, 208, 143, 18],
+      "accounts": [
+        {
+          "name": "subscription",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115, 117, 98, 115, 99, 114, 105, 112, 116, 105, 111, 110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "subscription.subscription_id",
+                "account": "Subscription"
+              }
+            ]
+          }
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 114, 111, 99, 101, 115, 115, 111, 114]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "emergency_withdraw",
+      "discriminator": [239, 45, 203, 64, 150, 73, 218, 92],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 114, 111, 99, 101, 115, 115, 111, 114]
+              }
+            ]
+          }
+        },
+        {
+          "name": "source_token_account",
+          "writable": true
+        },
+        {
+          "name": "destination_token_account",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "end_grace_period",
+      "discriminator": [179, 27, 168, 78, 146, 140, 109, 137],
+      "accounts": [
+        {
+          "name": "subscription",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115, 117, 98, 115, 99, 114, 105, 112, 116, 105, 111, 110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "subscription.subscription_id",
+                "account": "Subscription"
+              }
+            ]
+          }
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 114, 111, 99, 101, 115, 115, 111, 114]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize",
+      "discriminator": [175, 175, 109, 31, 13, 152, 155, 237],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 114, 111, 99, 101, 115, 115, 111, 114]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "platform_wallet",
+          "type": "pubkey"
+        },
+        {
+          "name": "platform_maintenance_wallet",
+          "type": "pubkey"
+        },
+        {
+          "name": "platform_referral_wallet",
+          "type": "pubkey"
+        },
+        {
+          "name": "usdt_mint",
+          "type": "pubkey"
+        },
+        {
+          "name": "usdc_mint",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "process_auto_renewal",
+      "discriminator": [57, 219, 54, 156, 65, 132, 0, 209],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 114, 111, 99, 101, 115, 115, 111, 114]
+              }
+            ]
+          }
+        },
+        {
+          "name": "subscription",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115, 117, 98, 115, 99, 114, 105, 112, 116, 105, 111, 110
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "subscription_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "subscriber_token_account",
+          "writable": true
+        },
+        {
+          "name": "creator_token_account",
+          "writable": true
+        },
+        {
+          "name": "platform_token_account",
+          "writable": true
+        },
+        {
+          "name": "platform_maintenance_token_account",
+          "writable": true
+        },
+        {
+          "name": "platform_referral_token_account",
+          "writable": true
+        },
+        {
+          "name": "bounty_source",
+          "writable": true,
+          "optional": true
+        },
+        {
+          "name": "executor_token_account",
+          "writable": true,
+          "optional": true
+        },
+        {
+          "name": "executor",
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "subscription_id",
+          "type": {
+            "array": ["u8", 32]
+          }
+        }
+      ]
+    },
+    {
+      "name": "process_payment",
+      "discriminator": [189, 81, 30, 198, 139, 186, 115, 23],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 114, 111, 99, 101, 115, 115, 111, 114]
+              }
+            ]
+          }
+        },
+        {
+          "name": "payment_record",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112, 97, 121, 109, 101, 110, 116, 95, 114, 101, 99, 111, 114,
+                  100
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "payment_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "payment_token_mint"
+        },
+        {
+          "name": "payer_token_account",
+          "writable": true
+        },
+        {
+          "name": "creator"
+        },
+        {
+          "name": "creator_token_account",
+          "writable": true
+        },
+        {
+          "name": "platform_wallet"
+        },
+        {
+          "name": "platform_token_account",
+          "writable": true
+        },
+        {
+          "name": "platform_maintenance_wallet"
+        },
+        {
+          "name": "platform_maintenance_token_account",
+          "writable": true
+        },
+        {
+          "name": "platform_referral_wallet"
+        },
+        {
+          "name": "platform_referral_token_account",
+          "writable": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "payment_id",
+          "type": {
+            "array": ["u8", 32]
+          }
+        },
+        {
+          "name": "split_strategy",
+          "type": {
+            "option": {
+              "defined": {
+                "name": "SplitStrategy"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "remove_renewal_executor",
+      "discriminator": [62, 249, 109, 184, 63, 77, 31, 247],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 114, 111, 99, 101, 115, 115, 111, 114]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "executor",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "remove_supported_token",
+      "discriminator": [80, 206, 7, 134, 88, 218, 248, 219],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 114, 111, 99, 101, 115, 115, 111, 114]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "token_mint",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "set_auto_renewal_consent",
+      "discriminator": [181, 70, 57, 187, 232, 244, 231, 73],
+      "accounts": [
+        {
+          "name": "subscription",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115, 117, 98, 115, 99, 114, 105, 112, 116, 105, 111, 110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "subscription.subscription_id",
+                "account": "Subscription"
+              }
+            ]
+          }
+        },
+        {
+          "name": "subscriber",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "enabled",
+          "type": "bool"
+        },
+        {
+          "name": "max_allowance",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "set_bounty_config",
+      "discriminator": [163, 221, 91, 147, 22, 129, 165, 235],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 114, 111, 99, 101, 115, 115, 111, 114]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "bounty_per_renewal",
+          "type": "u64"
+        },
+        {
+          "name": "max_bounty_per_tx",
+          "type": "u64"
+        },
+        {
+          "name": "enabled",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "set_platform_split_bps",
+      "discriminator": [222, 208, 212, 172, 172, 125, 81, 210],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 114, 111, 99, 101, 115, 115, 111, 114]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "wallet_bps",
+          "type": "u16"
+        },
+        {
+          "name": "maintenance_bps",
+          "type": "u16"
+        },
+        {
+          "name": "referral_bps",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "set_platform_wallet",
+      "discriminator": [148, 153, 158, 72, 12, 69, 43, 12],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 114, 111, 99, 101, 115, 115, 111, 114]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_platform_wallet",
+          "type": "pubkey"
+        },
+        {
+          "name": "new_maintenance_wallet",
+          "type": "pubkey"
+        },
+        {
+          "name": "new_referral_wallet",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "start_grace_period",
+      "discriminator": [213, 82, 171, 53, 231, 131, 195, 136],
+      "accounts": [
+        {
+          "name": "subscription",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115, 117, 98, 115, 99, 114, 105, 112, 116, 105, 111, 110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "subscription.subscription_id",
+                "account": "Subscription"
+              }
+            ]
+          }
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 114, 111, 99, 101, 115, 115, 111, 114]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "subscribe",
+      "discriminator": [254, 28, 191, 138, 156, 179, 183, 53],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 114, 111, 99, 101, 115, 115, 111, 114]
+              }
+            ]
+          }
+        },
+        {
+          "name": "subscription",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115, 117, 98, 115, 99, 114, 105, 112, 116, 105, 111, 110
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "params.subscription_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "payment_token_mint"
+        },
+        {
+          "name": "subscriber_token_account",
+          "writable": true
+        },
+        {
+          "name": "creator"
+        },
+        {
+          "name": "creator_token_account",
+          "writable": true
+        },
+        {
+          "name": "platform_wallet"
+        },
+        {
+          "name": "platform_token_account",
+          "writable": true
+        },
+        {
+          "name": "platform_maintenance_wallet"
+        },
+        {
+          "name": "platform_maintenance_token_account",
+          "writable": true
+        },
+        {
+          "name": "platform_referral_wallet"
+        },
+        {
+          "name": "platform_referral_token_account",
+          "writable": true
+        },
+        {
+          "name": "subscriber",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "SubscribeParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "toggle_pause",
+      "discriminator": [238, 237, 206, 27, 255, 95, 123, 229],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 114, 111, 99, 101, 115, 115, 111, 114]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "paused",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "update_maintenance_wallet",
+      "discriminator": [229, 0, 62, 229, 255, 42, 113, 147],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 114, 111, 99, 101, 115, 115, 111, 114]
+              }
+            ]
+          }
+        },
+        {
+          "name": "current_wallet",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_wallet",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "update_platform_wallet",
+      "discriminator": [76, 183, 6, 58, 132, 56, 171, 156],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 114, 111, 99, 101, 115, 115, 111, 114]
+              }
+            ]
+          }
+        },
+        {
+          "name": "current_wallet",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_wallet",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "update_referral_wallet",
+      "discriminator": [223, 12, 3, 145, 245, 172, 99, 135],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 114, 111, 99, 101, 115, 115, 111, 114]
+              }
+            ]
+          }
+        },
+        {
+          "name": "current_wallet",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_wallet",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "update_status",
+      "discriminator": [147, 215, 74, 174, 55, 191, 42, 0],
+      "accounts": [
+        {
+          "name": "subscription",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115, 117, 98, 115, 99, 114, 105, 112, 116, 105, 111, 110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "subscription.subscription_id",
+                "account": "Subscription"
+              }
+            ]
+          }
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 114, 111, 99, 101, 115, 115, 111, 114]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_status",
+          "type": {
+            "defined": {
+              "name": "SubscriptionStatus"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "PaymentRecord",
+      "discriminator": [202, 168, 56, 249, 127, 226, 86, 226]
+    },
+    {
+      "name": "PledgrConfig",
+      "discriminator": [140, 54, 237, 77, 4, 242, 21, 105]
+    },
+    {
+      "name": "Subscription",
+      "discriminator": [64, 7, 26, 135, 102, 132, 98, 33]
+    }
+  ],
+  "events": [
+    {
+      "name": "AutoRenewalConsentSet",
+      "discriminator": [135, 77, 236, 145, 194, 53, 63, 22]
+    },
+    {
+      "name": "AutoRenewalProcessed",
+      "discriminator": [229, 2, 133, 33, 48, 248, 96, 212]
+    },
+    {
+      "name": "GracePeriodEnded",
+      "discriminator": [223, 194, 178, 60, 62, 94, 101, 241]
+    },
+    {
+      "name": "GracePeriodStarted",
+      "discriminator": [29, 141, 96, 6, 89, 79, 171, 110]
+    },
+    {
+      "name": "PaymentProcessed",
+      "discriminator": [22, 109, 191, 213, 83, 63, 120, 219]
+    },
+    {
+      "name": "StatusUpdated",
+      "discriminator": [19, 149, 70, 150, 145, 120, 241, 11]
+    },
+    {
+      "name": "SubscribeCompleted",
+      "discriminator": [247, 137, 78, 97, 17, 124, 229, 66]
+    },
+    {
+      "name": "SubscriptionCancelled",
+      "discriminator": [158, 216, 233, 205, 138, 62, 176, 239]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "ProgramPaused",
+      "msg": "Program is paused"
+    },
+    {
+      "code": 6001,
+      "name": "Unauthorized",
+      "msg": "Unauthorized access"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidAmount",
+      "msg": "Invalid amount"
+    },
+    {
+      "code": 6003,
+      "name": "SubscriptionNotActive",
+      "msg": "Subscription not active"
+    },
+    {
+      "code": 6004,
+      "name": "PaymentNotDue",
+      "msg": "Payment not due"
+    },
+    {
+      "code": 6005,
+      "name": "InsufficientBalance",
+      "msg": "Insufficient token balance"
+    },
+    {
+      "code": 6006,
+      "name": "InvalidToken",
+      "msg": "Invalid token"
+    },
+    {
+      "code": 6007,
+      "name": "ArithmeticOverflow",
+      "msg": "Arithmetic overflow"
+    },
+    {
+      "code": 6008,
+      "name": "AutoRenewalNotEnabled",
+      "msg": "Auto-renewal not enabled"
+    },
+    {
+      "code": 6009,
+      "name": "ExceedsMaxAllowance",
+      "msg": "Exceeds max allowance"
+    },
+    {
+      "code": 6010,
+      "name": "CreatorCannotBePlatform",
+      "msg": "Creator cannot be platform wallet"
+    },
+    {
+      "code": 6011,
+      "name": "TokenNotSupported",
+      "msg": "Token not supported"
+    },
+    {
+      "code": 6012,
+      "name": "InvalidPlatformSplit",
+      "msg": "Platform split basis points must sum to 10000"
+    },
+    {
+      "code": 6013,
+      "name": "AlreadyChargedThisPeriod",
+      "msg": "Already charged this period"
+    },
+    {
+      "code": 6014,
+      "name": "RenewalBlocked",
+      "msg": "Renewal blocked due to pending price change"
+    },
+    {
+      "code": 6015,
+      "name": "ExecutorNotAuthorized",
+      "msg": "Executor not authorized for renewals"
+    },
+    {
+      "code": 6016,
+      "name": "TokenNotFound",
+      "msg": "Token already removed or not found"
+    },
+    {
+      "code": 6017,
+      "name": "AlreadyInGrace",
+      "msg": "Already in grace period"
+    },
+    {
+      "code": 6018,
+      "name": "NotInGrace",
+      "msg": "Not in grace period"
+    },
+    {
+      "code": 6019,
+      "name": "InvalidStatusTransition",
+      "msg": "Invalid status transition"
+    }
+  ],
+  "types": [
+    {
+      "name": "AutoRenewalConsent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "enabled",
+            "type": "bool"
+          },
+          {
+            "name": "consent_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "max_allowance",
+            "type": "u64"
+          },
+          {
+            "name": "token_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "product_id",
+            "type": "u64"
+          },
+          {
+            "name": "grace_period_end",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PaymentRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "payment_id",
+            "type": {
+              "array": ["u8", 32]
+            }
+          },
+          {
+            "name": "payer",
+            "type": "pubkey"
+          },
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "payment_token",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PledgrConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "platform_wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "platform_maintenance_wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "platform_referral_wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "platform_wallet_bps",
+            "type": "u16"
+          },
+          {
+            "name": "platform_maintenance_bps",
+            "type": "u16"
+          },
+          {
+            "name": "platform_referral_bps",
+            "type": "u16"
+          },
+          {
+            "name": "supported_tokens",
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "total_processed",
+            "type": "u64"
+          },
+          {
+            "name": "total_subscriptions",
+            "type": "u64"
+          },
+          {
+            "name": "paused",
+            "type": "bool"
+          },
+          {
+            "name": "renewal_executors",
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "bounty_per_renewal",
+            "type": "u64"
+          },
+          {
+            "name": "max_bounty_per_tx",
+            "type": "u64"
+          },
+          {
+            "name": "bounty_enabled",
+            "type": "bool"
+          },
+          {
+            "name": "max_batch_size",
+            "type": "u16"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SplitStrategy",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Strategy100_0"
+          },
+          {
+            "name": "Strategy96_4"
+          },
+          {
+            "name": "Strategy95_5"
+          },
+          {
+            "name": "Strategy94_6"
+          },
+          {
+            "name": "Strategy93_7"
+          },
+          {
+            "name": "Strategy90_10"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SubscribeParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "subscription_id",
+            "type": {
+              "array": ["u8", 32]
+            }
+          },
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "payment_token_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "split_strategy",
+            "type": {
+              "defined": {
+                "name": "SplitStrategy"
+              }
+            }
+          },
+          {
+            "name": "period_secs",
+            "type": "u32"
+          },
+          {
+            "name": "trial_days",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "max_allowance",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Subscription",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "subscription_id",
+            "type": {
+              "array": ["u8", 32]
+            }
+          },
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "subscriber",
+            "type": "pubkey"
+          },
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "payment_token_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "split_strategy",
+            "type": {
+              "defined": {
+                "name": "SplitStrategy"
+              }
+            }
+          },
+          {
+            "name": "period_secs",
+            "type": "u32"
+          },
+          {
+            "name": "next_due",
+            "type": "i64"
+          },
+          {
+            "name": "grace_secs",
+            "type": "u32"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "last_charged",
+            "type": "i64"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "SubscriptionStatus"
+              }
+            }
+          },
+          {
+            "name": "total_paid",
+            "type": "u64"
+          },
+          {
+            "name": "payment_count",
+            "type": "u64"
+          },
+          {
+            "name": "trial_end_date",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "auto_renewal_consent",
+            "type": {
+              "defined": {
+                "name": "AutoRenewalConsent"
+              }
+            }
+          },
+          {
+            "name": "access_suspended",
+            "type": "bool"
+          },
+          {
+            "name": "price_change_pending",
+            "type": "bool"
+          },
+          {
+            "name": "pending_price",
+            "type": "u64"
+          },
+          {
+            "name": "price_change_request_time",
+            "type": "i64"
+          },
+          {
+            "name": "paid_period_end_time",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SubscriptionStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Active"
+          },
+          {
+            "name": "Grace"
+          },
+          {
+            "name": "PastDue"
+          },
+          {
+            "name": "Cancelled"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AutoRenewalConsentSet",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "subscription_id",
+            "type": {
+              "array": ["u8", 32]
+            }
+          },
+          {
+            "name": "subscriber",
+            "type": "pubkey"
+          },
+          {
+            "name": "enabled",
+            "type": "bool"
+          },
+          {
+            "name": "max_allowance",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AutoRenewalProcessed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "subscription_id",
+            "type": {
+              "array": ["u8", 32]
+            }
+          },
+          {
+            "name": "subscriber",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "success",
+            "type": "bool"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GracePeriodEnded",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "subscription_id",
+            "type": {
+              "array": ["u8", 32]
+            }
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GracePeriodStarted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "subscription_id",
+            "type": {
+              "array": ["u8", 32]
+            }
+          },
+          {
+            "name": "grace_end",
+            "type": "i64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PaymentProcessed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "payment_id",
+            "type": {
+              "array": ["u8", 32]
+            }
+          },
+          {
+            "name": "payer",
+            "type": "pubkey"
+          },
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "payment_token",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "creator_amount",
+            "type": "u64"
+          },
+          {
+            "name": "platform_amount",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StatusUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "subscription_id",
+            "type": {
+              "array": ["u8", 32]
+            }
+          },
+          {
+            "name": "old_status",
+            "type": {
+              "defined": {
+                "name": "SubscriptionStatus"
+              }
+            }
+          },
+          {
+            "name": "new_status",
+            "type": {
+              "defined": {
+                "name": "SubscriptionStatus"
+              }
+            }
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SubscribeCompleted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "subscription_id",
+            "type": {
+              "array": ["u8", 32]
+            }
+          },
+          {
+            "name": "subscriber",
+            "type": "pubkey"
+          },
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "max_allowance",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SubscriptionCancelled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "subscription_id",
+            "type": {
+              "array": ["u8", 32]
+            }
+          },
+          {
+            "name": "old_status",
+            "type": {
+              "defined": {
+                "name": "SubscriptionStatus"
+              }
+            }
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    }
+  ]
+}

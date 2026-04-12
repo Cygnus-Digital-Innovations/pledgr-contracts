@@ -1,0 +1,40 @@
+[features]
+seeds = false
+skip-lint = false
+
+[programs.localnet]
+pledgr = "J2v9sr2fvXShGJKDgX4fMmHkjeGfjy69ekqBSKLgdvEV"
+
+[programs.devnet]
+pledgr = "J2v9sr2fvXShGJKDgX4fMmHkjeGfjy69ekqBSKLgdvEV"
+
+[programs.mainnet]
+pledgr = "J2v9sr2fvXShGJKDgX4fMmHkjeGfjy69ekqBSKLgdvEV"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "devnet"
+
+[scripts]
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+
+[workspace]
+members = [
+    "programs/pledgr",
+]
+resolver = "2"
+
+[profile.release]
+overflow-checks = true
+lto = "fat"
+codegen-units = 1
+opt-level = 3
+strip = true
+debug = false
+
+[profile.release.build-override]
+opt-level = 3
+incremental = false
+codegen-units = 1
