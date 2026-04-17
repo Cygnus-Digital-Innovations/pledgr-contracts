@@ -7,58 +7,35 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
-/**
- * @title BuyOutAuction
- * @notice Single-unit buy-out auction contract
- * @dev Supports USDC/USDT on ARB and BNB chains
- */
 contract BuyOutAuction is AccessControl, ReentrancyGuard {
     using SafeERC20 for IERC20;
     using Address for address;
 
-    /// @notice Role for auction owner
     bytes32 public constant OWNER_ROLE = keccak256("OWNER_ROLE");
 
-    /// @notice Token used for bidding
-    IERC20 public paymentToken;
+    uint16 public constant CO_OWNER1_BPS = 4000;
+    uint16 public constant CO_OWNER2_BPS = 4000;
+    uint16 public constant COMMUNITY_BPS = 2000;
 
-    /// @notice Auction owner (seller)
+    IERC20 public paymentToken;
     address public owner;
 
-    /// @notice Starting/minimum bid price
+    address public immutable coOwner1Wallet;
+    address public immutable coOwner2Wallet;
+    address public immutable communityWallet;
+    uint16 public immutable creatorBps;
+    uint16 public immutable platformBps;
+
     uint256 public startingPrice;
-
-    /// @notice Buy out price (instant purchase)
     uint256 public buyOutPrice;
-
-    /// @notice Minimum bid increment (tick size)
     uint256 public tickSize;
-
-    /// @notice Auction start time
     uint256 public startTime;
-
-    /// @notice Auction end time
     uint256 public endTime;
-
-    /// @notice Whether buy out is enabled
     bool public buyOutEnabled;
 
-    /// @notice Highest bidder address
     address public highestBidder;
-
-    /// @notice Highest bid amount
     uint256 public highestBid;
 
-    /// @notice Bidder's claimed status
-    mapping(address => bool) public hasClaimed;
-
-    /// @notice Bidder's withdrawal status
-    mapping(address => bool) public hasWithdrawn;
-
-    /// @notice Bid history
-    Bid[] public bidHistory;
-
-    /// @notice Auction status
     enum Status {
         CREATED,
         ACTIVE,
@@ -67,14 +44,13 @@ contract BuyOutAuction is AccessControl, ReentrancyGuard {
     }
     Status public auctionStatus;
 
-    /// @notice Bid struct
     struct Bid {
         address bidder;
         uint256 amount;
         uint256 timestamp;
     }
+    Bid[] public bidHistory;
 
-    /// @notice Events
     event AuctionInitialized(
         address indexed owner,
         address paymentToken,
@@ -86,25 +62,49 @@ contract BuyOutAuction is AccessControl, ReentrancyGuard {
         bool buyOutEnabled
     );
 
-    event BidPlaced(address indexed bidder, uint256 amount, uint256 timestamp);
-    event BuyOutExecuted(address indexed buyer, uint256 amount, uint256 timestamp);
-    event BidWithdrawn(address indexed bidder, uint256 amount, uint256 timestamp);
-    event ItemClaimed(address indexed winner, uint256 timestamp);
+    event BidPlaced(
+        address indexed bidder,
+        uint256 amount,
+        uint256 creatorAmount,
+        uint256 platformAmount,
+        address indexed previousBidder,
+        uint256 refundAmount,
+        uint256 timestamp
+    );
+
+    event BuyOutExecuted(
+        address indexed buyer,
+        uint256 amount,
+        uint256 creatorAmount,
+        uint256 platformAmount,
+        address indexed previousBidder,
+        uint256 refundAmount,
+        uint256 timestamp
+    );
+
     event AuctionCancelled(address indexed owner, uint256 timestamp);
 
-    /**
-     * @notice Constructor
-     * @param _paymentToken Address of USDC or USDT
-     */
-    constructor(address _paymentToken) {
+    constructor(
+        address _paymentToken,
+        address _coOwner1Wallet,
+        address _coOwner2Wallet,
+        address _communityWallet,
+        uint16 _creatorBps,
+        uint16 _platformBps
+    ) {
         require(_paymentToken.isContract(), "Invalid payment token");
+        require(_creatorBps + _platformBps == 10000, "Invalid split");
+
         paymentToken = IERC20(_paymentToken);
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        coOwner1Wallet = _coOwner1Wallet;
+        coOwner2Wallet = _coOwner2Wallet;
+        communityWallet = _communityWallet;
+        creatorBps = _creatorBps;
+        platformBps = _platformBps;
+
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    /**
-     * @notice Initialize auction (called by factory)
-     */
     function initialize(
         address _owner,
         uint256 _startingPrice,
@@ -146,147 +146,139 @@ contract BuyOutAuction is AccessControl, ReentrancyGuard {
     }
 
     function _isActive() internal view returns (bool) {
-        if (auctionStatus == Status.CREATED || auctionStatus == Status.CANCELLED) return false;
-        if (auctionStatus == Status.COMPLETED) return false;
-        if (block.timestamp >= endTime) return false;
-        if (buyOutEnabled && highestBid >= buyOutPrice) return false;
+        if (auctionStatus != Status.ACTIVE) return false;
         if (block.timestamp < startTime) return false;
+        if (block.timestamp >= endTime) return false;
         return true;
+    }
+
+    function _calculateSplit(uint256 amount) internal view returns (uint256 creatorAmount, uint256 platformAmount) {
+        platformAmount = (amount * platformBps) / 10000;
+        creatorAmount = amount - platformAmount;
+    }
+
+    function _distributePlatformFee(uint256 platformAmount) internal {
+        if (platformAmount == 0) return;
+        uint256 co1 = (platformAmount * CO_OWNER1_BPS) / 10000;
+        uint256 co2 = (platformAmount * CO_OWNER2_BPS) / 10000;
+        uint256 comm = platformAmount - co1 - co2;
+        if (co1 > 0) paymentToken.safeTransfer(coOwner1Wallet, co1);
+        if (co2 > 0) paymentToken.safeTransfer(coOwner2Wallet, co2);
+        if (comm > 0) paymentToken.safeTransfer(communityWallet, comm);
+    }
+
+    function _settle(address bidder, uint256 amount) internal {
+        uint256 totalRequired = amount;
+        uint256 refundAmount = 0;
+        address previousBidder = highestBidder;
+
+        if (previousBidder != address(0)) {
+            refundAmount = highestBid;
+            totalRequired = amount;
+        }
+
+        paymentToken.safeTransferFrom(bidder, address(this), totalRequired);
+
+        if (refundAmount > 0) {
+            paymentToken.safeTransfer(previousBidder, refundAmount);
+        }
+
+        uint256 splitAmount;
+        if (previousBidder == address(0)) {
+            splitAmount = amount;
+        } else {
+            splitAmount = amount - refundAmount;
+        }
+
+        (uint256 creatorAmount, uint256 platformAmount) = _calculateSplit(splitAmount);
+        if (creatorAmount > 0) paymentToken.safeTransfer(owner, creatorAmount);
+        _distributePlatformFee(platformAmount);
+
+        highestBidder = bidder;
+        highestBid = amount;
+
+        bidHistory.push(Bid({
+            bidder: bidder,
+            amount: amount,
+            timestamp: block.timestamp
+        }));
     }
 
     function createBid(uint256 _amount) external nonReentrant {
         require(_isActive(), "Auction not active");
         require(msg.sender != owner, "Owner cannot bid");
-        require(_amount >= startingPrice, "Amount below starting price");
-        require(_amount >= highestBid + tickSize, "Amount below tick size");
-        require(highestBid + tickSize > highestBid, "Overflow");
+        require(_amount >= startingPrice, "Below starting price");
 
-        // Refund previous highest bidder
-        if (highestBidder != address(0) && !hasWithdrawn[highestBidder]) {
-            paymentToken.safeTransfer(highestBidder, highestBid);
-            hasWithdrawn[highestBidder] = true;
+        if (highestBidder != address(0)) {
+            require(_amount >= highestBid + tickSize, "Below tick size");
         }
 
-        // Take payment
-        paymentToken.safeTransferFrom(msg.sender, address(this), _amount);
+        address previousBidder = highestBidder;
+        uint256 previousBid = highestBid;
 
-        highestBidder = msg.sender;
-        highestBid = _amount;
+        uint256 splitAmount = previousBidder == address(0) ? _amount : _amount - previousBid;
+        (uint256 ca, uint256 pa) = _calculateSplit(splitAmount);
 
-        bidHistory.push(Bid({
-            bidder: msg.sender,
-            amount: _amount,
-            timestamp: block.timestamp
-        }));
+        _settle(msg.sender, _amount);
 
-        emit BidPlaced(msg.sender, _amount, block.timestamp);
+        emit BidPlaced(
+            msg.sender,
+            _amount,
+            ca,
+            pa,
+            previousBidder,
+            previousBid,
+            block.timestamp
+        );
     }
 
-    /**
-     * @notice Execute buy out - instant purchase
-     */
     function executeBuyOut() external nonReentrant {
         require(_isActive(), "Auction not active");
         require(buyOutEnabled, "Buy out not enabled");
         require(msg.sender != owner, "Owner cannot buy out");
-        require(highestBid < buyOutPrice, "Already at buy out price");
 
         uint256 amount = buyOutPrice;
+        address previousBidder = highestBidder;
+        uint256 previousBid = highestBid;
 
-        // Refund highest bidder if exists
-        if (highestBidder != address(0) && !hasWithdrawn[highestBidder]) {
-            paymentToken.safeTransfer(highestBidder, highestBid);
-            hasWithdrawn[highestBidder] = true;
-        }
+        uint256 splitAmount = previousBidder == address(0) ? amount : amount - previousBid;
+        (uint256 ca, uint256 pa) = _calculateSplit(splitAmount);
 
-        // Take payment
-        paymentToken.safeTransferFrom(msg.sender, address(this), amount);
-
-        highestBidder = msg.sender;
-        highestBid = amount;
+        _settle(msg.sender, amount);
         auctionStatus = Status.COMPLETED;
 
-        emit BuyOutExecuted(msg.sender, amount, block.timestamp);
+        emit BuyOutExecuted(
+            msg.sender,
+            amount,
+            ca,
+            pa,
+            previousBidder,
+            previousBid,
+            block.timestamp
+        );
     }
 
-    /**
-     * @notice Withdraw bid if outbid or auction cancelled
-     */
-    function withdraw() external nonReentrant {
-        require(hasWithdrawn[msg.sender] == false, "Already withdrawn");
-        
-        bool canWithdraw = false;
-        if (auctionStatus == Status.CANCELLED) {
-            canWithdraw = true;
-        } else if (auctionStatus == Status.COMPLETED || block.timestamp >= endTime) {
-            if (msg.sender != highestBidder) canWithdraw = true;
-        }
-        
-        require(canWithdraw, "Cannot withdraw");
-
-        uint256 refundAmount = 0;
-        
-        // For outbidded users, find their last bid
-        for (uint256 i = bidHistory.length; i > 0; i--) {
-            if (bidHistory[i - 1].bidder == msg.sender) {
-                refundAmount = bidHistory[i - 1].amount;
-                break;
-            }
-        }
-
-        require(refundAmount > 0, "Nothing to withdraw");
-
-        hasWithdrawn[msg.sender] = true;
-        paymentToken.safeTransfer(msg.sender, refundAmount);
-
-        emit BidWithdrawn(msg.sender, refundAmount, block.timestamp);
-    }
-
-    /**
-     * @notice Claim item (for winner)
-     */
-    function claim() external nonReentrant {
-        require(auctionStatus == Status.COMPLETED || (block.timestamp >= endTime && highestBid > 0), "Auction not completed");
-        require(msg.sender == highestBidder, "Not winner");
-        require(!hasClaimed[msg.sender], "Already claimed");
-
-        hasClaimed[msg.sender] = true;
-        
-        // Transfer winning bid to owner
-        paymentToken.safeTransfer(owner, highestBid);
-
-        emit ItemClaimed(msg.sender, block.timestamp);
-    }
-
-    /**
-     * @notice Cancel auction (only before start or by owner)
-     */
     function cancelAuction() external onlyRole(OWNER_ROLE) {
-        require(_isActive(), "Cannot cancel");
-        require(block.timestamp < startTime || highestBid == 0, "Cannot cancel with active bids");
+        require(auctionStatus == Status.ACTIVE, "Not active");
+        require(block.timestamp < startTime, "Already started");
 
         auctionStatus = Status.CANCELLED;
         emit AuctionCancelled(msg.sender, block.timestamp);
     }
 
-    /**
-     * @notice Get current auction status
-     */
     function getAuctionStatus() external view returns (Status) {
-        if (auctionStatus == Status.CREATED) return Status.CREATED;
         if (auctionStatus == Status.CANCELLED) return Status.CANCELLED;
         if (auctionStatus == Status.COMPLETED) return Status.COMPLETED;
-        
-        if (block.timestamp >= endTime || (buyOutEnabled && highestBid >= buyOutPrice)) {
-            return Status.COMPLETED;
-        }
+        if (auctionStatus == Status.CREATED) return Status.CREATED;
+        if (block.timestamp >= endTime) return Status.COMPLETED;
         return Status.ACTIVE;
     }
 
-    /**
-     * @notice Get bid count
-     */
     function getBidCount() external view returns (uint256) {
         return bidHistory.length;
+    }
+
+    function getHighestBid() external view returns (address, uint256) {
+        return (highestBidder, highestBid);
     }
 }
