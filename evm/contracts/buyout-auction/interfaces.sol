@@ -12,8 +12,8 @@ interface IBuyOutAuction {
         bool _buyOutEnabled
     ) external;
 
-    function createBid(uint256 _amount) external;
-    function executeBuyOut() external;
+    function createBid(uint256 _amount, uint256 _gasFee) external;
+    function executeBuyOut(uint256 _gasFee) external;
     function cancelAuction() external;
 
     function owner() external view returns (address);

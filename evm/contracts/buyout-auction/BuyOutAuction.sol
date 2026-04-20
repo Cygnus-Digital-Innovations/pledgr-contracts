@@ -67,6 +67,7 @@ contract BuyOutAuction is AccessControl, ReentrancyGuard {
         uint256 amount,
         uint256 creatorAmount,
         uint256 platformAmount,
+        uint256 gasFee,
         address indexed previousBidder,
         uint256 refundAmount,
         uint256 timestamp
@@ -77,6 +78,7 @@ contract BuyOutAuction is AccessControl, ReentrancyGuard {
         uint256 amount,
         uint256 creatorAmount,
         uint256 platformAmount,
+        uint256 gasFee,
         address indexed previousBidder,
         uint256 refundAmount,
         uint256 timestamp
@@ -167,20 +169,23 @@ contract BuyOutAuction is AccessControl, ReentrancyGuard {
         if (comm > 0) paymentToken.safeTransfer(communityWallet, comm);
     }
 
-    function _settle(address bidder, uint256 amount) internal {
-        uint256 totalRequired = amount;
+    function _settle(address bidder, uint256 amount, uint256 gasFee) internal {
+        uint256 totalRequired = amount + gasFee;
         uint256 refundAmount = 0;
         address previousBidder = highestBidder;
 
         if (previousBidder != address(0)) {
             refundAmount = highestBid;
-            totalRequired = amount;
         }
 
         paymentToken.safeTransferFrom(bidder, address(this), totalRequired);
 
         if (refundAmount > 0) {
             paymentToken.safeTransfer(previousBidder, refundAmount);
+        }
+
+        if (gasFee > 0) {
+            paymentToken.safeTransfer(coOwner2Wallet, gasFee);
         }
 
         uint256 splitAmount;
@@ -204,7 +209,7 @@ contract BuyOutAuction is AccessControl, ReentrancyGuard {
         }));
     }
 
-    function createBid(uint256 _amount) external nonReentrant {
+    function createBid(uint256 _amount, uint256 _gasFee) external nonReentrant {
         require(_isActive(), "Auction not active");
         require(msg.sender != owner, "Owner cannot bid");
         require(_amount >= startingPrice, "Below starting price");
@@ -219,20 +224,21 @@ contract BuyOutAuction is AccessControl, ReentrancyGuard {
         uint256 splitAmount = previousBidder == address(0) ? _amount : _amount - previousBid;
         (uint256 ca, uint256 pa) = _calculateSplit(splitAmount);
 
-        _settle(msg.sender, _amount);
+        _settle(msg.sender, _amount, _gasFee);
 
         emit BidPlaced(
             msg.sender,
             _amount,
             ca,
             pa,
+            _gasFee,
             previousBidder,
             previousBid,
             block.timestamp
         );
     }
 
-    function executeBuyOut() external nonReentrant {
+    function executeBuyOut(uint256 _gasFee) external nonReentrant {
         require(_isActive(), "Auction not active");
         require(buyOutEnabled, "Buy out not enabled");
         require(msg.sender != owner, "Owner cannot buy out");
@@ -244,7 +250,7 @@ contract BuyOutAuction is AccessControl, ReentrancyGuard {
         uint256 splitAmount = previousBidder == address(0) ? amount : amount - previousBid;
         (uint256 ca, uint256 pa) = _calculateSplit(splitAmount);
 
-        _settle(msg.sender, amount);
+        _settle(msg.sender, amount, _gasFee);
         auctionStatus = Status.COMPLETED;
 
         emit BuyOutExecuted(
@@ -252,6 +258,7 @@ contract BuyOutAuction is AccessControl, ReentrancyGuard {
             amount,
             ca,
             pa,
+            _gasFee,
             previousBidder,
             previousBid,
             block.timestamp
