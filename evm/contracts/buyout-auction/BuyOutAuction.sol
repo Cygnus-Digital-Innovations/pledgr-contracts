@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
@@ -18,7 +19,6 @@ contract BuyOutAuction is AccessControl, ReentrancyGuard, Pausable {
     uint16 public constant CO_OWNER1_BPS = 4000;
     uint16 public constant CO_OWNER2_BPS = 4000;
     uint16 public constant COMMUNITY_BPS = 2000;
-    uint256 public constant MAX_GAS_FEE = 1e6;
 
     IERC20 public paymentToken;
     address public owner;
@@ -28,6 +28,7 @@ contract BuyOutAuction is AccessControl, ReentrancyGuard, Pausable {
     address public immutable communityWallet;
     uint16 public immutable creatorBps;
     uint16 public immutable platformBps;
+    uint256 public immutable maxGasFee;
 
     uint256 public startingPrice;
     uint256 public buyOutPrice;
@@ -109,6 +110,7 @@ contract BuyOutAuction is AccessControl, ReentrancyGuard, Pausable {
         communityWallet = _communityWallet;
         creatorBps = _creatorBps;
         platformBps = _platformBps;
+        maxGasFee = 1 * (10 ** IERC20Metadata(_paymentToken).decimals());
 
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
@@ -230,7 +232,7 @@ contract BuyOutAuction is AccessControl, ReentrancyGuard, Pausable {
         require(msg.sender != owner, "Owner cannot bid");
         require(msg.sender != highestBidder, "Already highest bidder");
         require(_amount >= startingPrice, "Below starting price");
-        require(_gasFee <= MAX_GAS_FEE, "Gas fee too high");
+        require(_gasFee <= maxGasFee, "Gas fee too high");
 
         if (highestBidder != address(0)) {
             require(_amount >= highestBid + tickSize, "Below tick size");
@@ -261,7 +263,7 @@ contract BuyOutAuction is AccessControl, ReentrancyGuard, Pausable {
         require(buyOutEnabled, "Buy out not enabled");
         require(msg.sender != owner, "Owner cannot buy out");
         require(highestBid < buyOutPrice, "Bid already at buyout price");
-        require(_gasFee <= MAX_GAS_FEE, "Gas fee too high");
+        require(_gasFee <= maxGasFee, "Gas fee too high");
 
         uint256 amount = buyOutPrice;
         address previousBidder = highestBidder;
