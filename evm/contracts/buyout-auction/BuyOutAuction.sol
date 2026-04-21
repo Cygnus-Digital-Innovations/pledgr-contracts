@@ -3,19 +3,22 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
-contract BuyOutAuction is AccessControl, ReentrancyGuard {
+contract BuyOutAuction is AccessControl, ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20;
     using Address for address;
 
     bytes32 public constant OWNER_ROLE = keccak256("OWNER_ROLE");
+    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
     uint16 public constant CO_OWNER1_BPS = 4000;
     uint16 public constant CO_OWNER2_BPS = 4000;
     uint16 public constant COMMUNITY_BPS = 2000;
+    uint256 public constant MAX_GAS_FEE = 1e6;
 
     IERC20 public paymentToken;
     address public owner;
@@ -47,7 +50,6 @@ contract BuyOutAuction is AccessControl, ReentrancyGuard {
     struct Bid {
         address bidder;
         uint256 amount;
-        uint256 timestamp;
     }
     Bid[] public bidHistory;
 
@@ -85,6 +87,7 @@ contract BuyOutAuction is AccessControl, ReentrancyGuard {
     );
 
     event AuctionCancelled(address indexed owner, uint256 timestamp);
+    event AuctionFinalized(address indexed winner, uint256 winningBid, uint256 timestamp);
 
     constructor(
         address _paymentToken,
@@ -96,6 +99,9 @@ contract BuyOutAuction is AccessControl, ReentrancyGuard {
     ) {
         require(_paymentToken.isContract(), "Invalid payment token");
         require(_creatorBps + _platformBps == 10000, "Invalid split");
+        require(_coOwner1Wallet != address(0), "Invalid coOwner1");
+        require(_coOwner2Wallet != address(0), "Invalid coOwner2");
+        require(_communityWallet != address(0), "Invalid community");
 
         paymentToken = IERC20(_paymentToken);
         coOwner1Wallet = _coOwner1Wallet;
@@ -134,6 +140,8 @@ contract BuyOutAuction is AccessControl, ReentrancyGuard {
         auctionStatus = Status.ACTIVE;
 
         _grantRole(OWNER_ROLE, _owner);
+        _grantRole(PAUSER_ROLE, msg.sender);
+        _revokeRole(DEFAULT_ADMIN_ROLE, msg.sender);
 
         emit AuctionInitialized(
             _owner,
@@ -145,6 +153,14 @@ contract BuyOutAuction is AccessControl, ReentrancyGuard {
             _endTime,
             _buyOutEnabled
         );
+    }
+
+    function pause() external onlyRole(PAUSER_ROLE) {
+        _pause();
+    }
+
+    function unpause() external onlyRole(PAUSER_ROLE) {
+        _unpause();
     }
 
     function _isActive() internal view returns (bool) {
@@ -204,15 +220,16 @@ contract BuyOutAuction is AccessControl, ReentrancyGuard {
 
         bidHistory.push(Bid({
             bidder: bidder,
-            amount: amount,
-            timestamp: block.timestamp
+            amount: amount
         }));
     }
 
-    function createBid(uint256 _amount, uint256 _gasFee) external nonReentrant {
+    function createBid(uint256 _amount, uint256 _gasFee) external nonReentrant whenNotPaused {
         require(_isActive(), "Auction not active");
         require(msg.sender != owner, "Owner cannot bid");
+        require(msg.sender != highestBidder, "Already highest bidder");
         require(_amount >= startingPrice, "Below starting price");
+        require(_gasFee <= MAX_GAS_FEE, "Gas fee too high");
 
         if (highestBidder != address(0)) {
             require(_amount >= highestBid + tickSize, "Below tick size");
@@ -238,10 +255,12 @@ contract BuyOutAuction is AccessControl, ReentrancyGuard {
         );
     }
 
-    function executeBuyOut(uint256 _gasFee) external nonReentrant {
+    function executeBuyOut(uint256 _gasFee) external nonReentrant whenNotPaused {
         require(_isActive(), "Auction not active");
         require(buyOutEnabled, "Buy out not enabled");
         require(msg.sender != owner, "Owner cannot buy out");
+        require(highestBid < buyOutPrice, "Bid already at buyout price");
+        require(_gasFee <= MAX_GAS_FEE, "Gas fee too high");
 
         uint256 amount = buyOutPrice;
         address previousBidder = highestBidder;
@@ -271,6 +290,14 @@ contract BuyOutAuction is AccessControl, ReentrancyGuard {
 
         auctionStatus = Status.CANCELLED;
         emit AuctionCancelled(msg.sender, block.timestamp);
+    }
+
+    function finalizeAuction() external {
+        require(auctionStatus == Status.ACTIVE, "Not active");
+        require(block.timestamp >= endTime, "Auction not ended");
+
+        auctionStatus = Status.COMPLETED;
+        emit AuctionFinalized(highestBidder, highestBid, block.timestamp);
     }
 
     function getAuctionStatus() external view returns (Status) {
