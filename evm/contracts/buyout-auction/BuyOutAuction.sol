@@ -156,6 +156,7 @@ contract BuyOutAuction is AccessControl, ReentrancyGuard, Pausable {
     }
 
     function pause() external onlyRole(PAUSER_ROLE) {
+        require(highestBidder == address(0), "Cannot pause with active bids");
         _pause();
     }
 
