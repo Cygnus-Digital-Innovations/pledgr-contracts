@@ -2,12 +2,14 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
 import "./BuyOutAuction.sol";
 
 contract BuyOutAuctionFactory is Ownable {
     using Address for address;
+    using Clones for address;
 
     uint16 public constant CO_OWNER1_BPS = 4000;
     uint16 public constant CO_OWNER2_BPS = 4000;
@@ -19,6 +21,7 @@ contract BuyOutAuctionFactory is Ownable {
 
     address public immutable USDC;
     address public immutable USDT;
+    address public immutable implementation;
 
     uint256 public auctionCount;
 
@@ -83,6 +86,8 @@ contract BuyOutAuctionFactory is Ownable {
         coOwner2Wallet = _coOwner2Wallet;
         communityWallet = _communityWallet;
 
+        implementation = address(new BuyOutAuction());
+
         splitStrategies[0] = SplitConfig(10000, 0, true);
         splitStrategies[1] = SplitConfig(9600, 400, true);
         splitStrategies[2] = SplitConfig(9500, 500, true);
@@ -101,7 +106,9 @@ contract BuyOutAuctionFactory is Ownable {
         SplitConfig memory config = splitStrategies[params.splitStrategy];
         require(config.isActive, "Invalid split strategy");
 
-        BuyOutAuction auction = new BuyOutAuction(
+        BuyOutAuction auction = BuyOutAuction(implementation.clone());
+
+        auction.setupClone(
             tokenAddr,
             coOwner1Wallet,
             coOwner2Wallet,

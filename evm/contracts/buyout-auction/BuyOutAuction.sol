@@ -23,12 +23,12 @@ contract BuyOutAuction is AccessControl, ReentrancyGuard, Pausable {
     IERC20 public paymentToken;
     address public owner;
 
-    address public immutable coOwner1Wallet;
-    address public immutable coOwner2Wallet;
-    address public immutable communityWallet;
-    uint16 public immutable creatorBps;
-    uint16 public immutable platformBps;
-    uint256 public immutable maxGasFee;
+    address public coOwner1Wallet;
+    address public coOwner2Wallet;
+    address public communityWallet;
+    uint16 public creatorBps;
+    uint16 public platformBps;
+    uint256 public maxGasFee;
 
     uint256 public startingPrice;
     uint256 public buyOutPrice;
@@ -90,14 +90,19 @@ contract BuyOutAuction is AccessControl, ReentrancyGuard, Pausable {
     event AuctionCancelled(address indexed owner, uint256 timestamp);
     event AuctionFinalized(address indexed winner, uint256 winningBid, uint256 timestamp);
 
-    constructor(
+    constructor() {
+        auctionStatus = Status.CANCELLED;
+    }
+
+    function setupClone(
         address _paymentToken,
         address _coOwner1Wallet,
         address _coOwner2Wallet,
         address _communityWallet,
         uint16 _creatorBps,
         uint16 _platformBps
-    ) {
+    ) external {
+        require(address(paymentToken) == address(0), "Already setup");
         require(_paymentToken.isContract(), "Invalid payment token");
         require(_creatorBps + _platformBps == 10000, "Invalid split");
         require(_coOwner1Wallet != address(0), "Invalid coOwner1");
