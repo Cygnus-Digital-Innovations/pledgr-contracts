@@ -2,6 +2,15 @@
 pragma solidity ^0.8.20;
 
 interface IBuyOutAuction {
+    function setupClone(
+        address _paymentToken,
+        address _coOwner1Wallet,
+        address _coOwner2Wallet,
+        address _communityWallet,
+        uint16 _creatorBps,
+        uint16 _platformBps
+    ) external;
+
     function initialize(
         address _owner,
         uint256 _startingPrice,
